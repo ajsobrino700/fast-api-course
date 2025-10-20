@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "fast-api-course"
+version = "1.0.0"
+description = "A little application with fast api in python"
+authors = ["ajsobrino <ajsobrino700@gmial.com>"]
+readme = "README.md"
+packages = [{include = "fast_api_course"}]
+
+[tool.poetry.dependencies]
+python = "^3.14"
+fastapi = "^0.119.1"
+uvicorn = "^0.38.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
