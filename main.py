@@ -1,66 +1,130 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-
-class Book(BaseModel):
-    tittle: str
-    author: str
-    category: str
-
+from typing import Optional
+from fastapi import FastAPI, Path, Query, HTTPException
+from starlette import status
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
 
-BOOKS: [Book] = [
-    {
-        "title": "Crafting Interpreters",
-        "author": "Robert Nystrom",
-        "category": "programming",
-    },
-    {
-        "title": "Optimization Algorithms",
-        "author": "Alaa Khamis",
-        "category": "algorithms",
-    },
-    {
-        "title": "The selfish gene",
-        "author": "Richard Dawkins",
-        "category": "science",
-    },
+class Book:
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+
+    def __init__(self, id, title, author, description, rating):
+        self.id = id
+        self.title = title
+        self.author = author
+        self.description = description
+        self.rating = rating
+
+
+class BookRequest(BaseModel):
+    id: Optional[int] = Field(
+        default=None, description="The internal identifier of the book"
+    )
+    title: str = Field(min_length=5)
+    author: str = Field(min_length=1)
+    description: str = Field(min_length=1, max_length=100)
+    rating: int = Field(ge=0, le=10)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "title": "A new book",
+                "author": "codingwithantonio",
+                "description": "A new description",
+                "rating": 10,
+            }
+        }
+    }
+
+
+class Books:
+    books: list[Book]
+
+    def __init__(self, books):
+        self.books = books
+
+
+BOOKS = [
+    Book(
+        id=1,
+        title="The selfish gene",
+        author="Richard Dawkins",
+        description="Holy shit",
+        rating=7,
+    ),
+    Book(
+        id=2,
+        title="Fast API",
+        author="Colombian Guy",
+        description="Good framework",
+        rating=5,
+    ),
+    Book(
+        id=3,
+        title="Introduction to Algorithms",
+        author="Four guys",
+        description="The best book, it is the bible",
+        rating=11,
+    ),
+    Book(
+        id=4,
+        title="Crafting Interpreters",
+        author="Robert Nystrom",
+        description="A little practical introduction to interpreters",
+        rating=8,
+    ),
 ]
 
 
-@app.get("/api-endpoint")
-async def first_api():
-    return {"message": "Hello Antonio!"}
-
-
-@app.get("/mybook")
-async def favourite_book():
-    return {"title": "Introduction to Algorithms"}
-
-
 @app.get("/books")
-async def read_all_books():
-    return {"books": BOOKS}
+async def get_all_books():
+    return Books(books=BOOKS)
 
 
-@app.get("/books/category/{category}")
-async def read_book_by_category(category: str):
-    return {"books": list(filter(lambda x: x.get("category") == category, BOOKS))}
+@app.get("/book/{id}")
+async def get_book_by_id(id: int = Path(gt=0)):
+    book = next(filter(lambda book: book.id == id, BOOKS), None)
+
+    if not book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Book not found"
+        )
+    return book
 
 
-@app.get("/book")
-async def books(category: str | None):
-    return {"books": list(filter(lambda x: x.get("category") == category, BOOKS))}
+@app.get("/books/")
+async def get_by_rating(book_rating: int = Query(ge=0, le=10)):
+    return list(filter(lambda book: book.rating == book_rating, BOOKS))
 
 
-@app.get("/book/author")
-async def books_by_author(author: str):
-    return {"books": list(filter(lambda x: x.get("author") == author, BOOKS))}
+@app.put("/book/{id}")
+async def update_book(book_request: BookRequest, id: int = Path(gt=0)):
+    for i in range(len(BOOKS)):
+        if BOOKS[i].id == id:
+            book_request.id = id
+            BOOKS[i] = Book(**book_request.model_dump())
+    return {"id": id}
 
 
-@app.post("/book", status_code=201)
-async def create_book(book: Book):
-    BOOKS.append(book)
-    return
+@app.delete("/book/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_book(id: int = Path(gt=0)):
+    find = False
+    for i in range(len(BOOKS)):
+        if BOOKS[i].id == id:
+            BOOKS.pop(i)
+            find = True
+
+    if not find:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="The book not exist"
+        )
+
+
+@app.post("/book", status_code=status.HTTP_204_NO_CONTENT)
+async def create_book(book_request: BookRequest):
+    BOOKS.append(Book(**book_request.model_dump()))
