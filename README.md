@@ -21,3 +21,6 @@ by default we are using the port 8000
 
 The framework load by default the UI of **Open API** then we can access to that
 documentation in port 8000 and path **/docs**.
+
+Also the project has a makefile archive where you can do the more important
+actions directly.

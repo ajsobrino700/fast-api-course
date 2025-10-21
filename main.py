@@ -1,66 +1,58 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-
-class Book(BaseModel):
-    tittle: str
-    author: str
-    category: str
-
-
 app = FastAPI()
 
 
-BOOKS: [Book] = [
-    {
-        "title": "Crafting Interpreters",
-        "author": "Robert Nystrom",
-        "category": "programming",
-    },
-    {
-        "title": "Optimization Algorithms",
-        "author": "Alaa Khamis",
-        "category": "algorithms",
-    },
-    {
-        "title": "The selfish gene",
-        "author": "Richard Dawkins",
-        "category": "science",
-    },
+class Book(BaseModel):
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+
+
+class Books(BaseModel):
+    books: list[Book]
+
+
+BOOKS = [
+    Book(
+        id=1,
+        title="The selfish gene",
+        author="Richard Dawkins",
+        description="Holy shit",
+        rating=7,
+    ),
+    Book(
+        id=2,
+        title="Fast API",
+        author="Colombian Guy",
+        description="Good framework",
+        rating=5,
+    ),
+    Book(
+        id=3,
+        title="Introduction to Algorithms",
+        author="Four guys",
+        description="The best book, it is the bible",
+        rating=11,
+    ),
+    Book(
+        id=4,
+        title="Crafting Interpreters",
+        author="Robert Nystrom",
+        description="A little practical introduction to interpreters",
+        rating=8,
+    ),
 ]
 
 
-@app.get("/api-endpoint")
-async def first_api():
-    return {"message": "Hello Antonio!"}
-
-
-@app.get("/mybook")
-async def favourite_book():
-    return {"title": "Introduction to Algorithms"}
-
-
 @app.get("/books")
-async def read_all_books():
-    return {"books": BOOKS}
-
-
-@app.get("/books/category/{category}")
-async def read_book_by_category(category: str):
-    return {"books": list(filter(lambda x: x.get("category") == category, BOOKS))}
-
-
-@app.get("/book")
-async def books(category: str | None):
-    return {"books": list(filter(lambda x: x.get("category") == category, BOOKS))}
-
-
-@app.get("/book/author")
-async def books_by_author(author: str):
-    return {"books": list(filter(lambda x: x.get("author") == author, BOOKS))}
+async def get_all_books() -> Books:
+    return Books(books=BOOKS)
 
 
 @app.post("/book", status_code=201)
 async def create_book(book: Book):
     BOOKS.append(book)
-    return
