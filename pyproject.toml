@@ -16,7 +16,11 @@ pyjwt = "^2.10.1"
 python-multipart = "^0.0.20"
 python-jose = "^3.5.0"
 psycopg2-binary = "^2.9.11"
+alembic = "^1.17.0"
 
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.4.2"
 
 [build-system]
 requires = ["poetry-core"]
