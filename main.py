@@ -10,3 +10,8 @@ app.include_router(router=todo_router, prefix="/todo", tags=["Todo"])
 app.include_router(router=book_router, prefix="/book", tags=["Book"])
 app.include_router(router=auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(router=admin_router)
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "Health"}
